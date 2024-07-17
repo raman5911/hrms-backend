@@ -7,6 +7,11 @@ module.exports.Signup = async (req, res, next) => {
         // getting user input
         const { email, password, createdAt } = req.body;
 
+        // if any field is empty
+        if (!email || !password) {
+            return res.json({ message: 'All fields are required' })
+        }
+
         //finding if user already exists
         const existingUser = await User.findOne({ email });
 
