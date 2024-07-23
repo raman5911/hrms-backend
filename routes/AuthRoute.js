@@ -4,8 +4,12 @@ const { userVerification } = require("../middlewares/AuthMiddleware");
 const usersRoute = require("../routes/UsersRoute");
 const emailTemplatesRoute = require("../routes/EmailTemplateRoute");
 const templatesRoute = require("../routes/TemplatesRoute");
+const { trusted } = require("mongoose");
+const { sendMailToUser} = require("../util/Emailfunc");
+const {approver} = require("../controllers/approver");
 
-const router = require("express").Router();
+const router = require("express").Router();  
+
 
 router.post("/signup", Signup);
 router.post('/login', Login);
@@ -13,6 +17,8 @@ router.post('/',userVerification);
 router.post('/requests/create_request', createRequest);
 router.use('/users', usersRoute);
 router.use('/email_templates', emailTemplatesRoute);
-router.use('/templates', templatesRoute);
+router.use('/templates', templatesRoute); 
+router.post ( '/sendMail', sendMailToUser); 
+router.post ( '/api/employee/approve' , approver);
 
 module.exports = router;

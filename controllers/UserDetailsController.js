@@ -1,5 +1,5 @@
 const User = require("../models/UserModel");
-const Employee = require("../models/new_usermodel");
+const Employee = require("../models/new_usermodel1");
 module.exports.fetchUsersList = async (req, res, next) => {
   try {
     // only fetch name, userID of all the users excluding their obj id
