@@ -1,4 +1,6 @@
-const router = require("express").Router();
+ //MADE BY ANANDITA------------------------------------------> 
+ //Sending of  mail templates API---------------------------->
+ const router = require("express").Router();
 const nodemailer = require('nodemailer');
 const { mail_template } = require("../mail templates/leave");
 
@@ -9,16 +11,16 @@ module.exports.sendMailToUser = (req, res, reciever_email) => {
         secure: true ,
  
         auth: {
-            user: 'anandita2022@outlook.com',
-            pass: 'khushi@2022'
+            user: '',
+            pass: ''
         }
     });
 
     console.log(mail_template);
 
     const mailOptions = {
-        from: 'anandita2022@outlook.com',
-        to: 'khushu@yopmail.com',
+        from: '',
+        to: 'mehoquotassa-2797@yopmail.com',
         subject: 'Subject of  email',
         html: mail_template()
     };
