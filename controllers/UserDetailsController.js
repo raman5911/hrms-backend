@@ -19,7 +19,7 @@ module.exports.fetchUsersList = async (req, res, next) => {
 };
 module.exports.fetchEmployee = async (req, res, next) => {
   try {
-    // only fetch name, employeeID of all the users excluding their obj id
+    // fetch all users data - comment corrected by raman
     const data = await Employee.find();
 
     res
