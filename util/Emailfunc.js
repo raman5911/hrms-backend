@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const nodemailer = require('nodemailer');
-const { mail_template } = require("../mail templates/leave");
+const { remainder_template } = require("../mail templates/remainder");
 
 module.exports.sendMailToUser = (req, res, reciever_email) => {
     const transporter = nodemailer.createTransport({
@@ -14,13 +14,21 @@ module.exports.sendMailToUser = (req, res, reciever_email) => {
         }
     });
 
-    console.log(mail_template);
+    // console.log(mail_template);
 
     const mailOptions = {
         from: 'anandita2022@outlook.com',
         to: 'khushu@yopmail.com',
         subject: 'Subject of  email',
-        html: mail_template()
+        html: remainder_template({
+            response:"approved",
+            remainder_type: "Leave Request",
+            name: "sakshi",
+            requested_by: "leave",
+            requested_to: "23-07-24",
+            
+            requesed_on: "23-07-24"
+        })
     };
 
 
