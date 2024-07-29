@@ -1,10 +1,15 @@
 const mongoose = require("mongoose")
 
-const employeeDetailsSchema = new mongoose.Schema({
+const Request_Schema = new mongoose.Schema({
     employee_id: {
-        type: String
-    },
-    type: {
+        type: String ,
+        required: true
+    }, 
+    Req_id: { 
+        type: String, 
+        required:true
+    }, 
+    Req_type: {
         type: String
     },
     start_date: {
@@ -40,6 +45,6 @@ const employeeDetailsSchema = new mongoose.Schema({
 
 
 })
-const EmployeeDetails = mongoose.model('EmployeeDetails', employeeDetailsSchema);
+const EmployeeDetails = mongoose.model('EmployeeModel', Request_Schema);
 
-module.exports = EmployeeDetails;
+module.exports = EmployeeDetails; 

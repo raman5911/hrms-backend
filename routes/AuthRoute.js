@@ -6,7 +6,7 @@ const emailTemplatesRoute = require("../routes/EmailTemplateRoute");
 const templatesRoute = require("../routes/TemplatesRoute");
 const { trusted } = require("mongoose");
 const { sendMailToUser} = require("../util/Emailfunc");
-const {approver} = require("../controllers/approver");
+const {approver} = require("../controllers/ApproveController");
 
 const router = require("express").Router();  
 
