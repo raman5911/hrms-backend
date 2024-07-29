@@ -1,4 +1,5 @@
 const User = require("../models/UserModel");
+const Employee = require('../models/new_usermodel1');
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
@@ -29,3 +30,43 @@ module.exports.userVerification = (req, res) => {
         }
     })
 }
+
+module.exports.authMiddleware = async (req, res, next) => {
+    try {
+      // Get the token from the request cookies
+      const token = req.cookies.token;
+
+      console.log(req);
+
+      console.log('token value : ');
+      console.log(token);
+  
+      if (!token) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+  
+      // Verify the token
+      const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+
+      console.log('jwt verify');
+      console.log(decoded);
+  
+      // Find the employee based on the decoded ID
+      const employee = await Employee.find({ Employee_Id: decoded.id.Employee_Id });
+  
+      if (!employee) {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+  
+      // Attach the employee to the request object
+      req.employee = employee;
+
+      console.log(req);
+  
+      next();
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  };
+  
