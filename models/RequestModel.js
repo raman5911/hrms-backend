@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose"); // By anandita
 
 const Request_Schema = new mongoose.Schema({
     employee_id: {
@@ -28,23 +28,22 @@ const Request_Schema = new mongoose.Schema({
         type: String
     },
 
-    approve_details: [
-        {
-            approver_name: {
-                type: String
-            },
-            approved_status: {
-                type: String
-            },
-            approved_date: {
-                type: Date,
-                default: Date.now  // This sets the default value to the current date/time
-            }
-        }
-    ]
+  approve_details: [
+    {
+      approver_name: {
+        type: String,
+      },
+      approved_status: {
+        type: String,
+      },
+      approved_date: {
+        type: Date,
+        default: Date.now, // This sets the default value to the current date/time
+      },
+    },
+  ],
+});
 
-
-})
-const EmployeeDetails = mongoose.model('EmployeeModel', Request_Schema);
+const EmployeeDetails = mongoose.model('RequestModel', Request_Schema);
 
 module.exports = EmployeeDetails; 
