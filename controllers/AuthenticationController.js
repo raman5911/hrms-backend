@@ -15,6 +15,16 @@ const helmet = require('helmet');
 // To control domains which can access API
 const cors = require('cors');;
 
+module.exports.profileHandler = (req, res) => {
+    // Access the authenticated employee via req.employee
+    res.json({ employee: req.employee });
+  };
+
+module.exports.updateHandler = (req, res) => {
+    // Access the authenticated employee via req.employee
+   res.json({ employee: req.employee });
+  };  
+
 // Email validation function
 const isValidEmail = (email) => {
     return email.includes('@');
@@ -30,8 +40,9 @@ const isValidPassword = (password) => {
 const isValidContact = (contact) => {
     return /^\d{10}$/.test(contact);
 };
-module.exports.signup=[limiter, helmet(), cors({origin: 'https://yourdomain.com',credentials: true}),
-     async (req, res, next) =>{
+// array of middleware functions
+const signupMiddleware= [limiter, helmet(), cors({origin: 'https://yourdomain.com',credentials: true})]
+     const signup = async (req, res, next) =>{
      try { 
         // getting user input
          const { name,email, password,contact } = req.body;
@@ -56,7 +67,7 @@ module.exports.signup=[limiter, helmet(), cors({origin: 'https://yourdomain.com'
         const sanitizedName = xss(name);
        // const employee_id = Date.now().toString();
         const newEmployee = {
-            Employee_Id: "HR07",
+            Employee_Id: "HR77",
             Employee_details:{
               name: sanitizedName,
               contact: contact,
@@ -70,7 +81,7 @@ module.exports.signup=[limiter, helmet(), cors({origin: 'https://yourdomain.com'
         console.log(ifExist)
         // if exists, return error
         if (ifExist) {
-        res.status(404).send("You are already signed in!");
+        res.status(404).send("You are already registered!");
         }
         // create new user
          const new_Employee = await Employee.create(newEmployee);
@@ -83,7 +94,7 @@ module.exports.signup=[limiter, helmet(), cors({origin: 'https://yourdomain.com'
          res.cookie("token", token, {
              withCredentials: true,
              httpOnly: false,
-             
+
          });
  
          // sending response
@@ -101,7 +112,10 @@ module.exports.signup=[limiter, helmet(), cors({origin: 'https://yourdomain.com'
      } catch (error) {
          console.error(error);
      }
- }];
+ };
+ // Pass through all middleware functions before reaching exactly the current signup
+ module.exports.signup = [...signupMiddleware, signup];
+
  module.exports.signIN = async (req, res, next) => {
     try {
         // getting user input
@@ -146,3 +160,9 @@ module.exports.signup=[limiter, helmet(), cors({origin: 'https://yourdomain.com'
         console.error(error);
     }
 }
+module.exports = {
+    signup: module.exports.signup,
+    signIN: module.exports.signIN,
+    profileHandler: module.exports.profileHandler,
+    updateHandler:module.exports.updateHandler
+  };
