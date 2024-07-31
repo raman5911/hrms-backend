@@ -9,7 +9,7 @@ const app = express();
 
 
 
-module.exports.approver = async (req, res, next) => { 
+module.exports.approver = async (req, res, next) => {
 
     try {
         const { Req_id, approver_name, approved_status, employee_id, Req_type, asset, start_date, end_date, reason, subject } = req.body;
@@ -30,7 +30,7 @@ module.exports.approver = async (req, res, next) => {
                 subject: subject,
                 approve_details: []
             });
-        } 
+        }
         else {
             console.log("Updating existing EmployeeDetails");
             employeeDetail.employee_id = employee_id;

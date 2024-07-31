@@ -1,5 +1,5 @@
 const User = require("../models/UserModel");
-const Employee = require("../models/new_usermodel1");
+const Employee = require("../models/new_usermodel1")
 module.exports.fetchUsersList = async (req, res, next) => {
   try {
     // only fetch name, userID of all the users excluding their obj id
@@ -15,7 +15,10 @@ module.exports.fetchUsersList = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "An error occurred while fetching users" });
-  }
+  } 
+  console.log(NewEmployeeId);
+
+
 };
 module.exports.fetchEmployee = async (req, res, next) => {
   try {
@@ -101,5 +104,6 @@ module.exports.putemployee = async (req, res) => {
       .status(500)
       .json({ message: "Error updating employee", error: error.message });
   }
-};
+}; 
+
 
