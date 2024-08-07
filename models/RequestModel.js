@@ -1,16 +1,22 @@
 const mongoose = require("mongoose"); // By anandita
 
 const Request_Schema = new mongoose.Schema({
-    employee_id: {
+    requestor_id: {
         type: String ,
         required: true
     }, 
-    Req_id: { 
+    request_id: { 
         type: String, 
-        required:true
+        // required:true
     }, 
-    Req_type: {
+    request_type: {
         type: String
+    },
+    leave_type: {
+      type: String
+    },
+    number_of_days: {
+      type: String
     },
     start_date: {
         type: Date
@@ -28,22 +34,17 @@ const Request_Schema = new mongoose.Schema({
         type: String
     },
 
-  approve_details: [
-    {
-      approver_name: {
-        type: String,
-      },
-      approved_status: {
-        type: String,
-      },
-      approved_date: {
-        type: Date,
-        default: Date.now, // This sets the default value to the current date/time
-      },
+    accepted_array: [],
+    rejected_array: [],
+    
+    completed_or_not: {
+      type: Boolean
     },
-  ],
+    current_approver_id: {
+      type: String
+    }
 });
 
-const EmployeeDetails = mongoose.model('RequestModel', Request_Schema);
+const EmployeeDetails = mongoose.model('Request', Request_Schema);
 
 module.exports = EmployeeDetails; 

@@ -1,9 +1,9 @@
-require("dotenv").config();
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
-// creating secret unique token
-module.exports.createPrivateToken = (id) => {
-    return jwt.sign({ id }, process.env.PRIVATE_KEY, {
-        expiresIn: 3 * 24 * 60 * 60,
-    });
-};
+module.exports.createPrivateToken = (obj_id, companyCode) => {
+  const payload = {
+    id: obj_id, 
+    companyCode: companyCode
+  };
+  return jwt.sign(payload, process.env.PRIVATE_KEY, { expiresIn: '72h' });
+}

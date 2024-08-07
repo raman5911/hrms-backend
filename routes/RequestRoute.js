@@ -1,10 +1,8 @@
 const router = require("express").Router(); // By Shivam
-const { employeeLeave } = require("../controllers/RequestHandleController");
-const { Workfromhome } =  require("../controllers/RequestHandleController");
-const { newAsset } = require("../controllers/RequestHandleController");
-const { requesttoHR } = require("../controllers/RequestHandleController");
+const { employeeLeave, WorkFromHome, newAsset, repairAsset, requestToHR} = require("../controllers/RequestHandleController");
 router.post('/leave', employeeLeave );
-router.post('/Workfromhome', Workfromhome );
-router.post('/newAsset', newAsset );
-router.post('/requesttoHR', requesttoHR );
+router.post('/work_from_home', WorkFromHome );
+router.post('/new_asset', newAsset );
+router.post('/repair_asset', repairAsset );
+router.post('/request_to_hr', requestToHR );
 module.exports = router;
