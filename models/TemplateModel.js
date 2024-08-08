@@ -23,6 +23,10 @@ const templateSchema = new mongoose.Schema({
         type: String,
         required: true
       },
+      email_id: {
+        type: String,
+        required: true
+      }
     }
   ],
   emailTemplate: {

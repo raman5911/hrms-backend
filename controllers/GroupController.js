@@ -338,8 +338,8 @@ module.exports.removeMember = async (req, res, next) => {
     );
 
     if (!employee) {
-        return res.status(404).json({ message: "Member not found" });
-      }
+      return res.status(404).json({ message: "Member not found" });
+    }
 
     // reset group id of that member to null
     employee.group_id = null;
@@ -354,7 +354,9 @@ module.exports.removeMember = async (req, res, next) => {
     }
 
     // Filter out the member with the specified employeeId
-    const updatedMembers = group.members.filter(member => member.employee_id !== data.new_member.employee_id);
+    const updatedMembers = group.members.filter(
+      (member) => member.employee_id !== data.new_member.employee_id
+    );
 
     // Check if any member was actually removed
     if (updatedMembers.length === group.members.length) {

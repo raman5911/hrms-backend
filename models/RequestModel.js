@@ -5,10 +5,6 @@ const Request_Schema = new mongoose.Schema({
         type: String ,
         required: true
     }, 
-    request_id: { 
-        type: String, 
-        // required:true
-    }, 
     request_type: {
         type: String
     },
@@ -16,7 +12,7 @@ const Request_Schema = new mongoose.Schema({
       type: String
     },
     number_of_days: {
-      type: String
+      type: Number
     },
     start_date: {
         type: Date
@@ -27,15 +23,74 @@ const Request_Schema = new mongoose.Schema({
     reason: {
         type: String
     },
-    asset: {
-        type: String
+    new_asset_type: {
+      type: String
+    },
+    repair_asset: {
+        brand_name: {
+          type: String
+        },
+        model_number: {
+          type: String
+        },
+        asset_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Asset'
+        }
     },
     subject: {
         type: String
     },
 
-    accepted_array: [],
-    rejected_array: [],
+    list_of_approvers: [
+      {
+        employee_id: {
+          type: String,
+          required: true
+        },
+        name: {
+          type: String,
+          required: true
+        },
+        email_id: {
+          type: String,
+          required: true
+        }
+      }
+    ],
+
+    accepted_array: [
+      {
+        approver_name: {
+          type: String
+        },
+        approver_id: {
+          type: String
+        },
+        action_date: {
+          type: Date
+        },
+        remarks: {
+          type: String
+        }
+      }
+    ],
+    rejected_array: [
+      {
+        approver_name: {
+          type: String
+        },
+        approver_id: {
+          type: String
+        },
+        action_date: {
+          type: Date
+        },
+        remarks: {
+          type: String
+        }
+      }
+    ],
     
     completed_or_not: {
       type: Boolean

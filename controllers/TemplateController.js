@@ -15,20 +15,20 @@ module.exports.fetchAll = async (req, res, next) => {
 module.exports.createNew = async (req, res, next) => {
     try {
         console.log(req.body);
-        const { name, type, emailTemplate, remainderEmailTemplate, responseEmailTemplate, levelOfApproval, approvers, tableRows } = req.body;
+        const { name, type, email_template, remainder_email_template, response_email_template, level_of_approval, approvers, tableRows } = req.body;
 
-        if (!name || !emailTemplate || !remainderEmailTemplate || !responseEmailTemplate || !levelOfApproval) {
+        if (!name || !email_template || !remainder_email_template || !response_email_template || !level_of_approval || !type || !approvers) {
             return res.json({ message: 'All fields are required except custom fields' });
         }
 
         const newTemplate = {
             name: name,
             type: type !== undefined ? type : -1,
-            levelOfApproval: levelOfApproval,
+            levelOfApproval: level_of_approval,
             approvers: approvers !== undefined ? approvers : [],
-            emailTemplate: new mongoose.Types.ObjectId(`${emailTemplate.id}`),
-            remainderEmailTemplate: new mongoose.Types.ObjectId(`${remainderEmailTemplate.id}`),
-            responseEmailTemplate: new mongoose.Types.ObjectId(`${responseEmailTemplate.id}`),
+            emailTemplate: new mongoose.Types.ObjectId(`${email_template.id}`),
+            remainderEmailTemplate: new mongoose.Types.ObjectId(`${remainder_email_template.id}`),
+            responseEmailTemplate: new mongoose.Types.ObjectId(`${response_email_template.id}`),
             tableRows: tableRows !== undefined ? tableRows : [],
         };
 
@@ -51,9 +51,9 @@ module.exports.editTemplate = async (req, res, next) => {
             return res.status(400).json({ message: "Invalid template ID", success: false });
         }
 
-        const { name, emailTemplate, remainderEmailTemplate, responseEmailTemplate, levelOfApproval, tableRows } = req.body;
+        const { name, emailTemplate, remainderEmailTemplate, responseEmailTemplate, levelOfApproval, approvers, tableRows } = req.body;
 
-        if (!name || !emailTemplate || !remainderEmailTemplate || !responseEmailTemplate || !levelOfApproval) {
+        if (!name || !emailTemplate || !remainderEmailTemplate || !responseEmailTemplate || !levelOfApproval || !type || !approvers) {
             return res.json({ message: 'All fields are required except custom fields' });
         }
 
@@ -64,7 +64,9 @@ module.exports.editTemplate = async (req, res, next) => {
 
         const updatedTemplate = {
             name: name,
+            type: type !== undefined ? type : -1,            
             levelOfApproval: levelOfApproval,
+            approvers: approvers !== undefined ? approvers : [],
             emailTemplate: new mongoose.Types.ObjectId(emailTemplate),
             remainderEmailTemplate: new mongoose.Types.ObjectId(remainderEmailTemplate),
             responseEmailTemplate: new mongoose.Types.ObjectId(responseEmailTemplate),

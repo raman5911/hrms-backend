@@ -1,8 +1,15 @@
-const Request = require("../models/RequestModel");                  // By Shivam
-module.exports.employeeLeave = async (req, res, next) => {       // for creating a new function and exporting
-  try {                                                                                 // exception handling
-    const { start_date, end_date, leave_type, number_of_days, reason, employee_id } = req.body;
-    console.log("Received request to create employee leave");
+const Request = require("../models/RequestModel");
+const Company = require("../models/CompanyModel");
+const Group = require("../models/GroupModel");
+const Template = require("../models/TemplateModel");
+
+module.exports.employeeLeave = async (req, res, next) => {
+  try {
+    const requestor_employee_id = req.cookies.employee_id;
+    const requestor_company_code = req.cookies.companyCode;
+
+    const { start_date, end_date, leave_type, number_of_days, reason } =
+      req.body;
 
     // Parse dates directly from ISO format
     const parsedStartDate = new Date(start_date);
@@ -13,39 +20,91 @@ module.exports.employeeLeave = async (req, res, next) => {       // for creating
       throw new Error("Invalid date format");
     }
 
-    // Create a new EmployeeLeave instance
-    const newLeave = new Request({
-      employee_id: employee_id,
+    // find approvers from template applied to requestor
+    const company = await Company.findOne({
+      company_code: requestor_company_code,
+    });
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Find the employee within the company's employees array
+    const employee = company.employees.find(
+      (employee) => employee.employee_id === requestor_employee_id
+    );
+
+    console.log(employee);
+
+    if (!employee) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // find group id
+    const group_id = employee.group_id.toString();
+    console.log(group_id);
+
+    // find group
+    const group = await Group.findById(group_id);
+    console.log(group);
+
+    if (!group) {
+      return res.json({
+        message: "Invalid group id. Group doesn't exist",
+      });
+    }
+
+    // find template id
+    const leave_template_id = group.leave_template_id.toString();
+
+    // find template
+    const template = await Template.findById(leave_template_id);
+
+    if (!template) {
+      return res.json({
+        message: "Can't apply for request, template not found.",
+      });
+    }
+
+    const approvers_list = template.approvers;
+    console.log(approvers_list);
+
+    // Create a new request
+    const new_request = new Request({
+      requestor_id: requestor_employee_id,
       start_date: parsedStartDate,
       end_date: parsedEndDate,
-      Req_type: "Leave",
+      request_type: "Leave",
       leave_type: leave_type,
       number_of_days: number_of_days,
       reason: reason,
+      list_of_approvers: approvers_list,
+      current_approver_id: approvers_list[0].employee_id,
     });
-    console.log(newLeave);
+    console.log(new_request);
 
-    // Save the new leave record to the database
-    const savedLeave = await newLeave.save();
+    const result = await new_request.save();
 
     // Send a success response
     res.status(201).json({
-      message: "Employee leave request created successfully",
-      leave: savedLeave,
+      message: "Request created successfully",
+      data: result,
     });
   } catch (error) {
     // Handle any errors
-    console.error("Error creating employee leave request:", error);
-    res
-      .status(500)
-      .json({ message: "Error creating employee leave request", error: error.message });
+    console.error("Error creating request", error);
+    res.status(500).json({
+      message: "Error creating request",
+      error: error.message,
+    });
   }
 };
 module.exports.WorkFromHome = async (req, res, next) => {
   try {
-    const { start_date, end_date, number_of_days, reason, employee_id } =
-      req.body;
-    console.log("Received request for Work from home");
+    const requestor_employee_id = req.cookies.employee_id;
+    const requestor_company_code = req.cookies.companyCode;
+
+    const { start_date, end_date, number_of_days, reason } = req.body;
 
     // Parse dates directly from ISO format
     const parsedStartDate = new Date(start_date);
@@ -56,113 +115,336 @@ module.exports.WorkFromHome = async (req, res, next) => {
       throw new Error("Invalid date format");
     }
 
-    // Create a new WorkFromHome instance
-    const newWorkFromHome = new Request({
-      employee_id: employee_id,
+    // find approvers from template applied to requestor
+    const company = await Company.findOne({
+      company_code: requestor_company_code,
+    });
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Find the employee within the company's employees array
+    const employee = company.employees.find(
+      (employee) => employee.employee_id === requestor_employee_id
+    );
+
+    console.log(employee);
+
+    if (!employee) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // find group id
+    const group_id = employee.group_id.toString();
+    console.log(group_id);
+
+    // find group
+    const group = await Group.findById(group_id);
+    console.log(group);
+
+    if (!group) {
+      return res.json({
+        message: "Invalid group id. Group doesn't exist",
+      });
+    }
+
+    // find template id
+    const wfh_template_id = group.wfh_template_id;
+
+    // find template
+    const template = await Template.findById(wfh_template_id);
+
+    if (!template) {
+      return res.json({
+        message: "Can't apply for request, template not found.",
+      });
+    }
+
+    const approvers_list = template.approvers;
+    console.log(approvers_list);
+
+    // Create a new request
+    const new_request = new Request({
+      requestor_id: requestor_employee_id,
       start_date: parsedStartDate,
       end_date: parsedEndDate,
+      request_type: "WFH",
       number_of_days: number_of_days,
       reason: reason,
+      list_of_approvers: approvers_list,
+      current_approver_id: approvers_list[0].employee_id,
     });
-    console.log(newWorkFromHome);
+    console.log(new_request);
 
     // Save the new leave record to the database
-    const savedReq = await newWorkFromHome.save();
+    const result = await new_request.save();
 
     // Send a success response
     res.status(201).json({
-      message: "Work from home request created successfully",
-      data: savedReq,
+      message: "Request created successfully",
+      data: result,
     });
   } catch (error) {
     // Handle any errors
-    console.error("Error creating Work from home request:", error);
-    res
-      .status(500)
-      .json({ message: "Error creating Work from home request", error: error.message });
+    console.error("Error creating request", error);
+    res.status(500).json({
+      message: "Error creating request",
+      error: error.message,
+    });
   }
 };
 module.exports.newAsset = async (req, res, next) => {
   try {
-    const { asset, reason, employee_id } = req.body;
-    console.log("Received request for new asset");
-    // Create a new request instance
-    const newReq = new Request({
-      employee_id: employee_id,
-      asset: asset,
-      reason: reason,
+    const requestor_employee_id = req.cookies.employee_id;
+    const requestor_company_code = req.cookies.companyCode;
+
+    const { asset_type, reason } = req.body;
+
+    // find approvers from template applied to requestor
+    const company = await Company.findOne({
+      company_code: requestor_company_code,
     });
-    console.log(newReq);
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Find the employee within the company's employees array
+    const employee = company.employees.find(
+      (employee) => employee.employee_id === requestor_employee_id
+    );
+
+    console.log(employee);
+
+    if (!employee) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // find group id
+    const group_id = employee.group_id.toString();
+    console.log(group_id);
+
+    // find group
+    const group = await Group.findById(group_id);
+    console.log(group);
+
+    if (!group) {
+      return res.json({
+        message: "Invalid group id. Group doesn't exist",
+      });
+    }
+
+    // find template id
+    const new_asset_template_id = group.new_asset_template_id;
+
+    // find template
+    const template = await Template.findById(new_asset_template_id);
+
+    if (!template) {
+      return res.json({
+        message: "Can't apply for request, template not found.",
+      });
+    }
+
+    const approvers_list = template.approvers;
+    console.log(approvers_list);
+
+    // Create a new request instance
+    const new_request = new Request({
+      requestor_id: requestor_employee_id,
+      request_type: "New Asset",
+      new_asset_type: asset_type,      
+      reason: reason,
+      list_of_approvers: approvers_list,
+      current_approver_id: approvers_list[0].employee_id,
+    });
+    console.log(new_request);
 
     // Save the new request record to the database
-    const savedLeave = await newReq.save();
+    const result = await new_request.save();
 
     // Send a success response
     res.status(201).json({
-      message: "New asset request registered successfully",
-      data: newReq,
+      message: "Request created successfully",
+      data: result,
     });
   } catch (error) {
     // Handle any errors
-    console.error("Error registering new asset request:", error);
-    res
-      .status(500)
-      .json({ message: "Error registering new asset request", error: error.message });
+    console.error("Error creating request", error);
+    res.status(500).json({
+      message: "Error creating request",
+      error: error.message,
+    });
   }
 };
 module.exports.repairAsset = async (req, res, next) => {
   try {
-    const { asset, reason, employee_id } = req.body;
-    console.log("Received request for repair asset");
-    // Create a new EmployeeLeave instance
-    const newReq = new Request({
-      employee_id: employee_id,
-      asset: asset,
-      reason: reason,
+    const requestor_employee_id = req.cookies.employee_id;
+    const requestor_company_code = req.cookies.companyCode;
+
+    const { selected_asset, reason } = req.body;
+
+    // find approvers from template applied to requestor
+    const company = await Company.findOne({
+      company_code: requestor_company_code,
     });
-    console.log(newReq);
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Find the employee within the company's employees array
+    const employee = company.employees.find(
+      (employee) => employee.employee_id === requestor_employee_id
+    );
+
+    console.log(employee);
+
+    if (!employee) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // find group id
+    const group_id = employee.group_id.toString();
+    console.log(group_id);
+
+    // find group
+    const group = await Group.findById(group_id);
+    console.log(group);
+
+    if (!group) {
+      return res.json({
+        message: "Invalid group id. Group doesn't exist",
+      });
+    }
+
+    // find template id
+    const repair_asset_template_id = group.repair_asset_template_id;
+
+    // find template
+    const template = await Template.findById(repair_asset_template_id);
+
+    if (!template) {
+      return res.json({
+        message: "Can't apply for request, template not found.",
+      });
+    }
+
+    const approvers_list = template.approvers;
+    console.log(approvers_list);
+
+    // Create a new request instance
+    const new_request = new Request({
+      requestor_id: requestor_employee_id,
+      request_type: "New Asset",
+      repair_asset: {
+        brand_name: selected_asset.brand_name,
+        model_number: selected_asset.model_number,
+        asset_id: selected_asset._id,
+      },
+      reason: reason,
+      current_approver_id: approvers_list[0].employee_id,
+    });
+    console.log(new_request);
 
     // Save the new request to the database
-    const savedLeave = await newReq.save();
+    const result = await new_request.save();
 
     // Send a success response
     res.status(201).json({
-      message: "Repair asset request registered successfully",
-      data: newReq,
+      message: "Request created successfully",
+      data: result,
     });
   } catch (error) {
     // Handle any errors
-    console.error("Error registering repair asset request:", error);
-    res
-      .status(500)
-      .json({ message: "Error registering repair asset request", error: error.message });
+    console.error("Error creating request", error);
+    res.status(500).json({
+      message: "Error creating request",
+      error: error.message,
+    });
   }
 };
 module.exports.requestToHR = async (req, res, next) => {
   try {
-    const { subject, reason, employee_id } = req.body;
-    console.log("Received request for HR");
+    const requestor_employee_id = req.cookies.employee_id;
+    const requestor_company_code = req.cookies.companyCode;
+
+    const { subject, reason } = req.body;
+
+    // find approvers from template applied to requestor
+    const company = await Company.findOne({
+      company_code: requestor_company_code,
+    });
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Find the employee within the company's employees array
+    const employee = company.employees.find(
+      (employee) => employee.employee_id === requestor_employee_id
+    );
+
+    console.log(employee);
+
+    if (!employee) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // find group id
+    const group_id = employee.group_id.toString();
+    console.log(group_id);
+
+    // find group
+    const group = await Group.findById(group_id);
+    console.log(group);
+
+    if (!group) {
+      return res.json({
+        message: "Invalid group id. Group doesn't exist",
+      });
+    }
+
+    // find template id
+    const hr_template_id = group.hr_template_id;
+
+    // find template
+    const template = await Template.findById(hr_template_id);
+
+    if (!template) {
+      return res.json({
+        message: "Can't apply for request, template not found.",
+      });
+    }
+
+    const approvers_list = template.approvers;
+    console.log(approvers_list);
+
     // Create a new request instance
-    const newReq = new Request({
-      employee_id: employee_id,
+    const new_request = new Request({
+      requestor_id: requestor_employee_id,
+      request_type: "HR",
       subject: subject,
       reason: reason,
+      list_of_approvers: approvers_list,
+      current_approver_id: approvers_list[0].employee_id,
     });
-    console.log(newReq);
+    console.log(new_request);
 
     // Save the new leave record to the database
-    const savedLeave = await newReq.save();
+    const result = await new_request.save();
 
     // Send a success response
     res.status(201).json({
-      message: "Request sent successfully to HR",
-      leave: savedLeave,
+      message: "Request created successfully",
+      data: result,
     });
   } catch (error) {
     // Handle any errors
-    console.error("Error sending request to HR:", error);
+    console.error("Error creating request", error);
     res
       .status(500)
-      .json({ message: "Error sending request to HR", error: error.message });
+      .json({ message: "Error creating request", error: error.message });
   }
 };
