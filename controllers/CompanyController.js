@@ -1,5 +1,6 @@
 const Company = require("../models/CompanyModel");
 const EmailToCompanyCodeMapping = require("../models/EmailToCompanyCodeMapping");
+const EmployeeIdToNameMapping = require("../models/EmployeeIdToNameMapping");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 
@@ -152,6 +153,13 @@ module.exports.addNewEmployee = async (req, res, next) => {
       email: new_employee.employee_details.email.toLowerCase(),
       companyCode: companyCode,
     });
+
+    await EmployeeIdToNameMapping.create({
+      employee_id: data.employee_id,
+      name: data.name,
+      email: data.email,
+      companyCode: companyCode
+    })
 
     res.status(201).json({
       success: true,

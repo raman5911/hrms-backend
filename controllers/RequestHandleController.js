@@ -2,6 +2,9 @@ const Request = require("../models/RequestModel");
 const Company = require("../models/CompanyModel");
 const Group = require("../models/GroupModel");
 const Template = require("../models/TemplateModel");
+const EmployeeIdToNameMapping = require("../models/EmployeeIdToNameMapping");
+
+const { sendMailToUser } = require("../util/SendMail");
 
 module.exports.employeeLeave = async (req, res, next) => {
   try {
@@ -84,6 +87,20 @@ module.exports.employeeLeave = async (req, res, next) => {
     console.log(new_request);
 
     const result = await new_request.save();
+
+    // fetch name from emp id
+    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+
+    await sendMailToUser({
+      request_type: "Leave Request",
+      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+      requested_on: new Date(),
+      approver_email_id: approvers_list[0].email_id,
+      request_data: new_request
+    }, "request");
 
     // Send a success response
     res.status(201).json({
@@ -180,6 +197,20 @@ module.exports.WorkFromHome = async (req, res, next) => {
     // Save the new leave record to the database
     const result = await new_request.save();
 
+    // fetch name from emp id
+    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+
+    await sendMailToUser({
+      request_type: "WFH Request",
+      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+      requested_on: new Date(),
+      approver_email_id: approvers_list[0].email_id,
+      request_data: new_request
+    }, "request");
+
     // Send a success response
     res.status(201).json({
       message: "Request created successfully",
@@ -264,6 +295,20 @@ module.exports.newAsset = async (req, res, next) => {
     // Save the new request record to the database
     const result = await new_request.save();
 
+    // fetch name from emp id
+    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+
+    await sendMailToUser({
+      request_type: "New Asset Request",
+      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+      requested_on: new Date(),
+      approver_email_id: approvers_list[0].email_id,
+      request_data: new_request
+    }, "request");
+
     // Send a success response
     res.status(201).json({
       message: "Request created successfully",
@@ -337,7 +382,7 @@ module.exports.repairAsset = async (req, res, next) => {
     // Create a new request instance
     const new_request = new Request({
       requestor_id: requestor_employee_id,
-      request_type: "New Asset",
+      request_type: "Asset Repair",
       repair_asset: {
         brand_name: selected_asset.brand_name,
         model_number: selected_asset.model_number,
@@ -350,6 +395,20 @@ module.exports.repairAsset = async (req, res, next) => {
 
     // Save the new request to the database
     const result = await new_request.save();
+
+    // fetch name from emp id
+    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+
+    await sendMailToUser({
+      request_type: "Repair Asset Request",
+      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+      requested_on: new Date(),
+      approver_email_id: approvers_list[0].email_id,
+      request_data: new_request
+    }, "request");
 
     // Send a success response
     res.status(201).json({
@@ -434,6 +493,20 @@ module.exports.requestToHR = async (req, res, next) => {
 
     // Save the new leave record to the database
     const result = await new_request.save();
+
+    // fetch name from emp id
+    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+
+    await sendMailToUser({
+      request_type: "New HR Request",
+      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+      requested_on: new Date(),
+      approver_email_id: approvers_list[0].email_id,
+      request_data: new_request
+    }, "request");
 
     // Send a success response
     res.status(201).json({
