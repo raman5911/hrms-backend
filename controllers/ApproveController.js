@@ -2,7 +2,7 @@
 //Made this API for updating the approval details of the employee...
 const express = require('express');
 const mongoose = require('mongoose');
-const EmployeeDetails = require('../models/EmployeeModel');
+const EmployeeDetails = require('../models/RequestModel');
 //const Employee = require('../models/new_usermodel1');
 const router = express.Router();
 const app = express();

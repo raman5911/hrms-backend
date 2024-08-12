@@ -15,26 +15,18 @@ const templateSchema = new mongoose.Schema({
   },
   approvers: [
     {
-      userID: {
+      employee_id: {
         type: String,
-        // required: true
+        required: true
       },
       name: {
         type: String,
-        // required: true
+        required: true
       },
-    //   actionTakenDate: {
-    //     type: Date
-    //   },
-    //   actionTakenTime: {
-    //     type: String
-    //   },
-    //   status: {
-    //     type: String
-    //   },
-    //   response: {
-    //     type: String
-    //   }
+      email_id: {
+        type: String,
+        required: true
+      }
     }
   ],
   emailTemplate: {

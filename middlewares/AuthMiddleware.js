@@ -1,31 +1,43 @@
-const User = require("../models/UserModel");
-require("dotenv").config();
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
+const Company = require('../models/CompanyModel');
 
-module.exports.userVerification = (req, res) => {
+module.exports.authMiddleware = async (req, res, next) => {
+  try {
+    // Get the token from the request cookies
     const token = req.cookies.token;
 
-    // if token is not present return false
     if (!token) {
-        return res.json({ status: false })
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
-    // else verify token
-    jwt.verify(token, process.env.TOKEN_KEY, async (err, data) => {
-        if (err) {
-            return res.json({ status: false })
-        } else {
-            const user = await User.findById(data.id)
-            
-            if (user) 
-            {
-                // return res.json({ status: true, user: user.username });
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
 
-                return res.json({ status: true });
-            } 
+    if (!decoded || !decoded.id || !decoded.companyCode) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
 
-            else 
-                return res.json({ status: false })
-        }
-    })
-}
+    // Find the company based on the company code
+    const company = await Company.findOne({ company_code: decoded.companyCode });
+
+    if (!company) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    // Find the employee based on the decoded ID within the specific company
+    const employee = company.employees.find(emp => emp._id.toString() === decoded.id);
+
+    if (!employee) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    // Attach the employee to the request object
+    req.employee = employee;
+    req.company = company;
+
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+};
