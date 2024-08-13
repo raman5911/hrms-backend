@@ -25,9 +25,7 @@ module.exports.sendMailToUser = (data, mail_type) => {
     if(mail_type === "request") {
         template = mail_template(data);
     } else if (mail_type === "response") {
-        template = response_template({
-
-        });
+        template = response_template(data);
     } else if (mail_type === "remainder") {
         template = remainder_template({
 

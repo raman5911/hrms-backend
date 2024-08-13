@@ -9,7 +9,7 @@ const groupRoute = require("../routes/GroupRoute");
 const assetRoute = require("../routes/AssetRoute");
 
 const { login } =  require("../controllers/AuthenticationController");
-// const { approver } = require("../controllers/ApproveController");
+const { approveOrReject } = require("../controllers/ApproveController");
 
 router.post('/login', login);
 
@@ -17,9 +17,9 @@ router.use('/company', authMiddleware, companyRoute);
 router.use('/group', authMiddleware, groupRoute);
 router.use('/templates', authMiddleware, templatesRoute); 
 router.use("/request", authMiddleware, RequestRoute);
+router.put ( '/approve-or-reject/:id', approveOrReject);
 
 router.use('/email_templates', authMiddleware, emailTemplatesRoute);
 router.use('/asset', assetRoute);
-// router.post ( '/api/employee/approve', authMiddleware, approver);
 
 module.exports = router;

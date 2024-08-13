@@ -5,6 +5,7 @@ const Template = require("../models/TemplateModel");
 const EmployeeIdToNameMapping = require("../models/EmployeeIdToNameMapping");
 
 const { sendMailToUser } = require("../util/SendMail");
+const { encrypt, decrypt } = require("../util/EncryptDecrypt");
 
 module.exports.employeeLeave = async (req, res, next) => {
   try {
@@ -37,7 +38,7 @@ module.exports.employeeLeave = async (req, res, next) => {
       (employee) => employee.employee_id === requestor_employee_id
     );
 
-    console.log(employee);
+    // console.log(employee);
 
     if (!employee) {
       return res.status(404).json({ message: "Member not found" });
@@ -70,7 +71,7 @@ module.exports.employeeLeave = async (req, res, next) => {
     }
 
     const approvers_list = template.approvers;
-    console.log(approvers_list);
+    // console.log(approvers_list);
 
     // Create a new request
     const new_request = new Request({
@@ -83,24 +84,42 @@ module.exports.employeeLeave = async (req, res, next) => {
       reason: reason,
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
+      completed_or_not: false,
     });
-    console.log(new_request);
+    // console.log(new_request);
 
     const result = await new_request.save();
 
     // fetch name from emp id
-    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+    const employee_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: requestor_employee_id,
+    });
 
-    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: approvers_list[0].employee_id,
+    });
 
-    await sendMailToUser({
-      request_type: "Leave Request",
-      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
-      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
-      requested_on: new Date(),
-      approver_email_id: approvers_list[0].email_id,
-      request_data: new_request
-    }, "request");
+    console.log(result);
+    // generating dynamic url with hash value
+    const encrypt_id = await encrypt(result._id.toString());
+    console.log(encrypt_id);
+
+    // const encoded_hash = encodeURIComponent(hash_obj_id);
+
+    console.log(result._id, " ", encrypt_id);
+
+    await sendMailToUser(
+      {
+        request_type: "Leave Request",
+        requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+        requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+        requested_on: new Date(),
+        approver_email_id: approvers_list[0].email_id,
+        request_data: new_request,
+        request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+      },
+      "request"
+    );
 
     // Send a success response
     res.status(201).json({
@@ -191,6 +210,7 @@ module.exports.WorkFromHome = async (req, res, next) => {
       reason: reason,
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
+      completed_or_not: false,
     });
     console.log(new_request);
 
@@ -198,18 +218,32 @@ module.exports.WorkFromHome = async (req, res, next) => {
     const result = await new_request.save();
 
     // fetch name from emp id
-    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+    const employee_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: requestor_employee_id,
+    });
 
-    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: approvers_list[0].employee_id,
+    });
 
-    await sendMailToUser({
-      request_type: "WFH Request",
-      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
-      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
-      requested_on: new Date(),
-      approver_email_id: approvers_list[0].email_id,
-      request_data: new_request
-    }, "request");
+    // generating dynamic url with hash value
+    const hash_obj_id = await bcrypt.hash(result._id.toString(), 12);
+    const encoded_hash = encodeURIComponent(hash_obj_id);
+
+    console.log(result._id, " ", hash_obj_id);
+
+    await sendMailToUser(
+      {
+        request_type: "WFH Request",
+        requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+        requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+        requested_on: new Date(),
+        approver_email_id: approvers_list[0].email_id,
+        request_data: new_request,
+        request_link: `${process.env.CLIENT_URL}/${encoded_hash}`,
+      },
+      "request"
+    );
 
     // Send a success response
     res.status(201).json({
@@ -285,10 +319,11 @@ module.exports.newAsset = async (req, res, next) => {
     const new_request = new Request({
       requestor_id: requestor_employee_id,
       request_type: "New Asset",
-      new_asset_type: asset_type,      
+      new_asset_type: asset_type,
       reason: reason,
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
+      completed_or_not: false,
     });
     console.log(new_request);
 
@@ -296,18 +331,34 @@ module.exports.newAsset = async (req, res, next) => {
     const result = await new_request.save();
 
     // fetch name from emp id
-    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+    const employee_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: requestor_employee_id,
+    });
 
-    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: approvers_list[0].employee_id,
+    });
 
-    await sendMailToUser({
-      request_type: "New Asset Request",
-      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
-      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
-      requested_on: new Date(),
-      approver_email_id: approvers_list[0].email_id,
-      request_data: new_request
-    }, "request");
+    // generating dynamic url with hash value
+    const encrypt_id = await encrypt(result._id.toString());
+    console.log(encrypt_id);
+
+    // const encoded_hash = encodeURIComponent(hash_obj_id);
+
+    console.log(result._id, " ", encrypt_id);
+
+    await sendMailToUser(
+      {
+        request_type: "New Asset Request",
+        requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+        requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+        requested_on: new Date(),
+        approver_email_id: approvers_list[0].email_id,
+        request_data: new_request,
+        request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+      },
+      "request"
+    );
 
     // Send a success response
     res.status(201).json({
@@ -387,6 +438,7 @@ module.exports.repairAsset = async (req, res, next) => {
         brand_name: selected_asset.brand_name,
         model_number: selected_asset.model_number,
         asset_id: selected_asset._id,
+        completed_or_not: false,
       },
       reason: reason,
       current_approver_id: approvers_list[0].employee_id,
@@ -397,18 +449,34 @@ module.exports.repairAsset = async (req, res, next) => {
     const result = await new_request.save();
 
     // fetch name from emp id
-    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+    const employee_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: requestor_employee_id,
+    });
 
-    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: approvers_list[0].employee_id,
+    });
 
-    await sendMailToUser({
-      request_type: "Repair Asset Request",
-      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
-      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
-      requested_on: new Date(),
-      approver_email_id: approvers_list[0].email_id,
-      request_data: new_request
-    }, "request");
+    // generating dynamic url with hash value
+    const encrypt_id = await encrypt(result._id.toString());
+    console.log(encrypt_id);
+
+    // const encoded_hash = encodeURIComponent(hash_obj_id);
+
+    console.log(result._id, " ", encrypt_id);
+
+    await sendMailToUser(
+      {
+        request_type: "Repair Asset Request",
+        requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+        requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+        requested_on: new Date(),
+        approver_email_id: approvers_list[0].email_id,
+        request_data: new_request,
+        request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+      },
+      "request"
+    );
 
     // Send a success response
     res.status(201).json({
@@ -488,6 +556,7 @@ module.exports.requestToHR = async (req, res, next) => {
       reason: reason,
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
+      completed_or_not: false
     });
     console.log(new_request);
 
@@ -495,18 +564,34 @@ module.exports.requestToHR = async (req, res, next) => {
     const result = await new_request.save();
 
     // fetch name from emp id
-    const employee_data = await EmployeeIdToNameMapping.findOne({ employee_id: requestor_employee_id });
+    const employee_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: requestor_employee_id,
+    });
 
-    const current_approver_data = await EmployeeIdToNameMapping.findOne({ employee_id: approvers_list[0].employee_id });
+    const current_approver_data = await EmployeeIdToNameMapping.findOne({
+      employee_id: approvers_list[0].employee_id,
+    });
 
-    await sendMailToUser({
-      request_type: "New HR Request",
-      requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
-      requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
-      requested_on: new Date(),
-      approver_email_id: approvers_list[0].email_id,
-      request_data: new_request
-    }, "request");
+    // generating dynamic url with hash value
+    const encrypt_id = await encrypt(result._id.toString());
+    console.log(encrypt_id);
+
+    // const encoded_hash = encodeURIComponent(hash_obj_id);
+
+    console.log(result._id, " ", encrypt_id);
+
+    await sendMailToUser(
+      {
+        request_type: "New HR Request",
+        requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
+        requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
+        requested_on: new Date(),
+        approver_email_id: approvers_list[0].email_id,
+        request_data: new_request,
+        request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+      },
+      "request"
+    );
 
     // Send a success response
     res.status(201).json({
@@ -521,3 +606,50 @@ module.exports.requestToHR = async (req, res, next) => {
       .json({ message: "Error creating request", error: error.message });
   }
 };
+
+module.exports.getRequestDetails = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const decrypt_id = await decrypt(id);
+
+    const data = await Request.findById(decrypt_id);
+    res.status(200).json({ data: data, success: true });
+  } catch (error) {
+    console.error("Error creating request", error);
+    res
+      .status(500)
+      .json({ message: "Error creating request", error: error.message });
+  }
+};
+
+module.exports.getAllRequestedByMe = async (req, res, next) => {
+  try {
+    const employee_id = req.cookies.employee_id;
+    const company_code = req.cookies.companyCode;
+
+    const data = await Request.find({ requestor_id: employee_id });
+    console.log(data);
+
+    res.status(200).json({ data: data, success: true, message: "Data fetched successfully" });
+  } catch (error) {
+    console.error("Error fetching requests", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching requests", error: error.message });
+  }
+}
+
+module.exports.getDirectReporteesRequest = async (req, res, next) => {
+  try {
+    const employee_id = req.cookies.employee_id;
+
+    const data = await Request.find({ current_approver_id: employee_id });
+    res.status(200).json({ data: data, success: true, message: "Data fetched successfully" });
+  } catch (error) {
+    console.error("Error fetching requests", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching requests", error: error.message });
+  }
+}

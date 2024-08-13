@@ -97,6 +97,11 @@ const Request_Schema = new mongoose.Schema({
     },
     current_approver_id: {
       type: String
+    },
+
+    raised_on: {
+      type: Date,
+      default: new Date()
     }
 });
 
