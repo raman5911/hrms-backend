@@ -48,10 +48,12 @@ module.exports.login = async (req, res, next) => {
     });
 
     res.cookie("employee_id", employee.employee_id, {
+      maxAge: 72 * 60 * 60 * 1000, // 72 hours in milliseconds
       // secure: true,
     //   sameSite: "Strict",
     });
     res.cookie("companyCode", mapping.companyCode, {
+      maxAge: 72 * 60 * 60 * 1000, // 72 hours in milliseconds
       // secure: true,
     //   sameSite: "Strict",
     });

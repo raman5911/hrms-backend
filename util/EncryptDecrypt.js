@@ -1,9 +1,10 @@
 const crypto = require('crypto');
 require("dotenv").config();
-const ENCRYPT_KEY = process.env.ENCRYPT_KEY
+const ENCRYPT_KEY = process.env.ENCRYPT_KEY;
+const IV_FOR_ENCRYPT = process.env.IV_FOR_ENCRYPT;
 
 module.exports.encrypt = async (data) => {
-    const iv = crypto.randomBytes(16);          // Generate a random Initialization Vector (IV)
+    const iv = Buffer.from(IV_FOR_ENCRYPT, 'hex');
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY), iv);     // Create a Cipher object using AES-256-CBC, the private key, and the IV
     let encrypted = cipher.update(data);            // Encrypt the data (in parts if needed)
     encrypted = Buffer.concat([encrypted, cipher.final()]);     // Finalize encryption and combine the results into one Buffer

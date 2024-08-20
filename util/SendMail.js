@@ -1,12 +1,10 @@
- //MADE BY ANANDITA------------------------------------------> 
- //Sending of  mail templates API---------------------------->
-
 const nodemailer = require('nodemailer');
 const { mail_template } = require("../mail templates/request");
 const { response_template } = require("../mail templates/response");
 const { remainder_template } = require("../mail templates/remainder");
+const { revoke_template } = require("../mail templates/revoke");
 
-module.exports.sendMailToUser = (data, mail_type) => {
+module.exports.sendMailToUser = async (data, mail_type) => {
     console.log(data);
 
     const transporter = nodemailer.createTransport({
@@ -26,7 +24,10 @@ module.exports.sendMailToUser = (data, mail_type) => {
         template = mail_template(data);
     } else if (mail_type === "response") {
         template = response_template(data);
-    } else if (mail_type === "remainder") {
+    } else if (mail_type === "revoke") {
+        template = revoke_template(data);
+    } 
+    else if (mail_type === "remainder") {
         template = remainder_template({
 
         });
@@ -34,18 +35,20 @@ module.exports.sendMailToUser = (data, mail_type) => {
 
     const mailOptions = {
         from: `${process.env.BOT_EMAIL_ID}`,
-        to: `${process.env.ENV === "prod" ? data.approver_email_id : process.env.RECEIVER_EMAIL_FOR_TEST }`,
+        to: `${process.env.ENV === "PROD" ? data.reciever_email_id : process.env.RECEIVER_EMAIL_FOR_TEST }`,
         subject: `${data.request_type}`,
         html: template
     };
 
 
     // Send email
-    transporter.sendMail(mailOptions, function (error, info) {
+    const mailSentOrNot = await transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-            console.log("Invalid login!");
+            console.log(error);
         } else {
             console.log('Email sent:' + info.response);
         }
     });
+
+    console.log(mailSentOrNot);
 }

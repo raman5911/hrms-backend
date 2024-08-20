@@ -85,6 +85,7 @@ module.exports.employeeLeave = async (req, res, next) => {
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
+      current_level: 1
     });
     // console.log(new_request);
 
@@ -101,20 +102,21 @@ module.exports.employeeLeave = async (req, res, next) => {
 
     console.log(result);
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(result._id.toString());
+    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
 
     console.log(result._id, " ", encrypt_id);
 
+    // sending mail to first approver
     await sendMailToUser(
       {
         request_type: "Leave Request",
         requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
         requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
         requested_on: new Date(),
-        approver_email_id: approvers_list[0].email_id,
+        reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
       },
@@ -211,6 +213,7 @@ module.exports.WorkFromHome = async (req, res, next) => {
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
+      current_level: 1
     });
     console.log(new_request);
 
@@ -227,18 +230,21 @@ module.exports.WorkFromHome = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const hash_obj_id = await bcrypt.hash(result._id.toString(), 12);
-    const encoded_hash = encodeURIComponent(hash_obj_id);
+    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
+    console.log(encrypt_id);
 
-    console.log(result._id, " ", hash_obj_id);
+    // const encoded_hash = encodeURIComponent(hash_obj_id);
 
+    console.log(result._id, " ", encrypt_id);
+
+    // sending mail to first approver
     await sendMailToUser(
       {
         request_type: "WFH Request",
         requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
         requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
         requested_on: new Date(),
-        approver_email_id: approvers_list[0].email_id,
+        reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encoded_hash}`,
       },
@@ -324,6 +330,7 @@ module.exports.newAsset = async (req, res, next) => {
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
+      current_level: 1
     });
     console.log(new_request);
 
@@ -340,20 +347,21 @@ module.exports.newAsset = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(result._id.toString());
+    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
 
     console.log(result._id, " ", encrypt_id);
 
+    // sending mail to first approver
     await sendMailToUser(
       {
         request_type: "New Asset Request",
         requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
         requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
         requested_on: new Date(),
-        approver_email_id: approvers_list[0].email_id,
+        reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
       },
@@ -439,6 +447,7 @@ module.exports.repairAsset = async (req, res, next) => {
         model_number: selected_asset.model_number,
         asset_id: selected_asset._id,
         completed_or_not: false,
+        current_level: 1
       },
       reason: reason,
       current_approver_id: approvers_list[0].employee_id,
@@ -458,20 +467,21 @@ module.exports.repairAsset = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(result._id.toString());
+    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
 
     console.log(result._id, " ", encrypt_id);
 
+    // sending mail to first approver
     await sendMailToUser(
       {
         request_type: "Repair Asset Request",
         requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
         requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
         requested_on: new Date(),
-        approver_email_id: approvers_list[0].email_id,
+        reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
       },
@@ -556,7 +566,8 @@ module.exports.requestToHR = async (req, res, next) => {
       reason: reason,
       list_of_approvers: approvers_list,
       current_approver_id: approvers_list[0].employee_id,
-      completed_or_not: false
+      completed_or_not: false,
+      current_level: 1
     });
     console.log(new_request);
 
@@ -573,20 +584,21 @@ module.exports.requestToHR = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(result._id.toString());
+    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
 
     console.log(result._id, " ", encrypt_id);
 
+    // sending mail to first approver
     await sendMailToUser(
       {
         request_type: "New HR Request",
         requested_by: `${employee_data.name} ( ${requestor_employee_id} )`,
         requested_to: `${current_approver_data.name} ( ${approvers_list[0].employee_id} )`,
         requested_on: new Date(),
-        approver_email_id: approvers_list[0].email_id,
+        reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
       },
@@ -612,14 +624,36 @@ module.exports.getRequestDetails = async (req, res, next) => {
     const { id } = req.params;
 
     const decrypt_id = await decrypt(id);
+    console.log(decrypt_id);
 
-    const data = await Request.findById(decrypt_id);
-    res.status(200).json({ data: data, success: true });
+    const obj_id = decrypt_id.split('_');
+    console.log(obj_id);
+
+    const request = await Request.findById(obj_id[0]);
+    console.log(request);
+
+    const accepted_array = request.accepted_array;
+    const rejected_array = request.rejected_array;
+
+    // adding data about status at every level
+    const status_at_all_levels = [];
+
+    // first pushing all approved entries
+    for(let element of accepted_array) {
+      status_at_all_levels.push(element);
+    }
+
+    // at last pushing rejected entry if any
+    for(let element of rejected_array) {
+      status_at_all_levels.push(element);
+    }
+
+    res.status(200).json({ data: { request, status_at_all_levels: status_at_all_levels }, success: true });
   } catch (error) {
-    console.error("Error creating request", error);
+    console.error("Error fetching request", error);
     res
       .status(500)
-      .json({ message: "Error creating request", error: error.message });
+      .json({ message: "Error fetching request", error: error.message });
   }
 };
 

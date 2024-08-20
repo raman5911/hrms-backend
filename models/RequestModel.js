@@ -98,6 +98,9 @@ const Request_Schema = new mongoose.Schema({
     current_approver_id: {
       type: String
     },
+    current_level: {
+      type: Number
+    },
 
     raised_on: {
       type: Date,
