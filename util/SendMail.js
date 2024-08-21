@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const { mail_template } = require("../mail templates/request");
 const { response_template } = require("../mail templates/response");
-const { remainder_template } = require("../mail templates/remainder");
+const { reminder_template } = require("../mail templates/reminder");
 const { revoke_template } = require("../mail templates/revoke");
 
 module.exports.sendMailToUser = async (data, mail_type) => {
@@ -27,10 +27,8 @@ module.exports.sendMailToUser = async (data, mail_type) => {
     } else if (mail_type === "revoke") {
         template = revoke_template(data);
     } 
-    else if (mail_type === "remainder") {
-        template = remainder_template({
-
-        });
+    else if (mail_type === "reminder") {
+        template = reminder_template(data);
     }
 
     const mailOptions = {

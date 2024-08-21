@@ -168,7 +168,10 @@ const CompanySchema = new mongoose.Schema({
     company_code: {
         type: Number,
     },
-    employees: [EmployeeSchema],
+    reminder_days: {
+        type: Number
+    },
+    employees: [EmployeeSchema]
 });
 
 const Company = mongoose.model('Company', CompanySchema);

@@ -83,9 +83,10 @@ module.exports.employeeLeave = async (req, res, next) => {
       number_of_days: number_of_days,
       reason: reason,
       list_of_approvers: approvers_list,
+      reminder_days: template.reminder_days,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
-      current_level: 1
+      current_level: 1,
     });
     // console.log(new_request);
 
@@ -102,7 +103,9 @@ module.exports.employeeLeave = async (req, res, next) => {
 
     console.log(result);
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
+    const encrypt_id = await encrypt(
+      `${result._id.toString()}_${result.current_level}`
+    );
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
@@ -211,9 +214,10 @@ module.exports.WorkFromHome = async (req, res, next) => {
       number_of_days: number_of_days,
       reason: reason,
       list_of_approvers: approvers_list,
+      reminder_days: template.reminder_days,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
-      current_level: 1
+      current_level: 1,
     });
     console.log(new_request);
 
@@ -230,7 +234,9 @@ module.exports.WorkFromHome = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
+    const encrypt_id = await encrypt(
+      `${result._id.toString()}_${result.current_level}`
+    );
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
@@ -328,9 +334,10 @@ module.exports.newAsset = async (req, res, next) => {
       new_asset_type: asset_type,
       reason: reason,
       list_of_approvers: approvers_list,
+      reminder_days: template.reminder_days,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
-      current_level: 1
+      current_level: 1,
     });
     console.log(new_request);
 
@@ -347,7 +354,9 @@ module.exports.newAsset = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
+    const encrypt_id = await encrypt(
+      `${result._id.toString()}_${result.current_level}`
+    );
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
@@ -447,9 +456,11 @@ module.exports.repairAsset = async (req, res, next) => {
         model_number: selected_asset.model_number,
         asset_id: selected_asset._id,
         completed_or_not: false,
-        current_level: 1
+        current_level: 1,
       },
       reason: reason,
+      list_of_approvers: approvers_list,
+      reminder_days: template.reminder_days,
       current_approver_id: approvers_list[0].employee_id,
     });
     console.log(new_request);
@@ -467,7 +478,9 @@ module.exports.repairAsset = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
+    const encrypt_id = await encrypt(
+      `${result._id.toString()}_${result.current_level}`
+    );
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
@@ -565,9 +578,10 @@ module.exports.requestToHR = async (req, res, next) => {
       subject: subject,
       reason: reason,
       list_of_approvers: approvers_list,
+      reminder_days: template.reminder_days,
       current_approver_id: approvers_list[0].employee_id,
       completed_or_not: false,
-      current_level: 1
+      current_level: 1,
     });
     console.log(new_request);
 
@@ -584,7 +598,9 @@ module.exports.requestToHR = async (req, res, next) => {
     });
 
     // generating dynamic url with hash value
-    const encrypt_id = await encrypt(`${result._id.toString()}_${result.current_level}`);
+    const encrypt_id = await encrypt(
+      `${result._id.toString()}_${result.current_level}`
+    );
     console.log(encrypt_id);
 
     // const encoded_hash = encodeURIComponent(hash_obj_id);
@@ -626,7 +642,7 @@ module.exports.getRequestDetails = async (req, res, next) => {
     const decrypt_id = await decrypt(id);
     console.log(decrypt_id);
 
-    const obj_id = decrypt_id.split('_');
+    const obj_id = decrypt_id.split("_");
     console.log(obj_id);
 
     const request = await Request.findById(obj_id[0]);
@@ -639,16 +655,19 @@ module.exports.getRequestDetails = async (req, res, next) => {
     const status_at_all_levels = [];
 
     // first pushing all approved entries
-    for(let element of accepted_array) {
+    for (let element of accepted_array) {
       status_at_all_levels.push(element);
     }
 
     // at last pushing rejected entry if any
-    for(let element of rejected_array) {
+    for (let element of rejected_array) {
       status_at_all_levels.push(element);
     }
 
-    res.status(200).json({ data: { request, status_at_all_levels: status_at_all_levels }, success: true });
+    res.status(200).json({
+      data: { request, status_at_all_levels: status_at_all_levels },
+      success: true,
+    });
   } catch (error) {
     console.error("Error fetching request", error);
     res
@@ -665,25 +684,105 @@ module.exports.getAllRequestedByMe = async (req, res, next) => {
     const data = await Request.find({ requestor_id: employee_id });
     console.log(data);
 
-    res.status(200).json({ data: data, success: true, message: "Data fetched successfully" });
+    res.status(200).json({
+      data: data,
+      success: true,
+      message: "Data fetched successfully",
+    });
   } catch (error) {
     console.error("Error fetching requests", error);
     res
       .status(500)
       .json({ message: "Error fetching requests", error: error.message });
   }
-}
+};
 
 module.exports.getDirectReporteesRequest = async (req, res, next) => {
   try {
     const employee_id = req.cookies.employee_id;
 
     const data = await Request.find({ current_approver_id: employee_id });
-    res.status(200).json({ data: data, success: true, message: "Data fetched successfully" });
+    res.status(200).json({
+      data: data,
+      success: true,
+      message: "Data fetched successfully",
+    });
   } catch (error) {
     console.error("Error fetching requests", error);
     res
       .status(500)
       .json({ message: "Error fetching requests", error: error.message });
   }
-}
+};
+
+// Send Remainder functionality
+module.exports.sendReminders = async () => {
+  try {
+    // only getting those requests which are not rejected & are at intermediate level
+    const pendingRequests = await Request.find({ completed_or_not: false });
+
+    // for each pending request
+    for (const request of pendingRequests) {
+      // get date on which last action was taken for request
+      const lastActionDate =
+        request.accepted_array.length > 0
+          ? request.accepted_array[request.accepted_array.length - 1]
+              .action_date
+          : request.raised_on;
+
+      // getting days according to x days
+      const xDaysAgo = new Date();
+      xDaysAgo.setDate(xDaysAgo.getDate() - request.reminder_days);
+
+      // comparing both dates
+      if (lastActionDate <= xDaysAgo) {
+        const approver = request.list_of_approvers.find(
+          (approver) => approver.employee_id === request.current_approver_id
+        );
+        if (approver) {
+          // sending mail
+          let request_type_heading_placeholder;
+
+          if (request.request_type === "Leave") {
+            request_type_heading_placeholder = "Leave Request";
+          } else if (request.request_type === "WFH") {
+            request_type_heading_placeholder = "WFH Request";
+          } else if (request.request_type === "New Asset") {
+            request_type_heading_placeholder = "New Asset Request";
+          } else if (request.request_type === "Asset Repair") {
+            request_type_heading_placeholder = "Repair Asset Request";
+          } else if (request.request_type === "HR") {
+            request_type_heading_placeholder = "New HR Request";
+          }
+
+          // fetch name from emp id
+          const employee_data = await EmployeeIdToNameMapping.findOne({
+            employee_id: request.requestor_id,
+          });
+
+          const current = request.list_of_approvers[request.current_level];
+
+          const encrypt_id = await encrypt(`${request._id.toString()}_${request.current_level}`);
+
+          // await sendMailToUser(approver.email_id, request);
+          await sendMailToUser(
+            {
+              request_type: request_type_heading_placeholder,
+              requested_by: `${employee_data.name} ( ${request.requestor_id} )`,
+              requested_to: `${current.name} ( ${current.employee_id} )`,
+              // requested_on: new Date(),
+              approver_email_id: current.email_id,
+              request_data: request,
+              request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+              reciever_email_id: current.email_id,
+            },
+            "reminder"
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};

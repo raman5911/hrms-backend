@@ -29,6 +29,9 @@ const templateSchema = new mongoose.Schema({
       }
     }
   ],
+  reminder_days: {
+    type: Number
+  },
   emailTemplate: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MailTemplate',

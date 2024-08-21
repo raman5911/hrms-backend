@@ -15,7 +15,7 @@ module.exports.fetchAll = async (req, res, next) => {
 module.exports.createNew = async (req, res, next) => {
     try {
         console.log(req.body);
-        const { name, type, email_template, remainder_email_template, response_email_template, level_of_approval, approvers, tableRows } = req.body;
+        const { name, type, email_template, remainder_email_template, response_email_template, level_of_approval, approvers, tableRows, reminder_days } = req.body;
 
         if (!name || !email_template || !remainder_email_template || !response_email_template || !level_of_approval || !type || !approvers) {
             return res.json({ message: 'All fields are required except custom fields' });
@@ -26,6 +26,7 @@ module.exports.createNew = async (req, res, next) => {
             type: type !== undefined ? type : -1,
             levelOfApproval: level_of_approval,
             approvers: approvers !== undefined ? approvers : [],
+            reminder_days: reminder_days !== undefined ? reminder_days : 2,     // default value 2
             emailTemplate: new mongoose.Types.ObjectId(`${email_template.id}`),
             remainderEmailTemplate: new mongoose.Types.ObjectId(`${remainder_email_template.id}`),
             responseEmailTemplate: new mongoose.Types.ObjectId(`${response_email_template.id}`),
@@ -67,6 +68,7 @@ module.exports.editTemplate = async (req, res, next) => {
             type: type !== undefined ? type : -1,            
             levelOfApproval: levelOfApproval,
             approvers: approvers !== undefined ? approvers : [],
+            reminder_days: reminder_days !== undefined ? reminder_days : 2,     // default value 2
             emailTemplate: new mongoose.Types.ObjectId(emailTemplate),
             remainderEmailTemplate: new mongoose.Types.ObjectId(remainderEmailTemplate),
             responseEmailTemplate: new mongoose.Types.ObjectId(responseEmailTemplate),
