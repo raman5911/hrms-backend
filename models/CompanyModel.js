@@ -102,19 +102,19 @@ const EmployeeSchema = new mongoose.Schema({
     },
     official_details: {
         role: {
-            // List of roles
+            
             type: String,
         },
         designation: {
-            // List of designations
+            
             type: String,
         },
         department: {
-            // List of departments
+            
             type: String,
         },
         reporting_manager: {
-            // list of managers
+            
             type: String,
         },
         direct_reportees: [{
