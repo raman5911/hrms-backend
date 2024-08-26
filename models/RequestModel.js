@@ -41,6 +41,9 @@ const Request_Schema = new mongoose.Schema({
     subject: {
         type: String
     },
+    reminder_days: {
+      type: Number
+    },
 
     list_of_approvers: [
       {
@@ -97,6 +100,14 @@ const Request_Schema = new mongoose.Schema({
     },
     current_approver_id: {
       type: String
+    },
+    current_level: {
+      type: Number
+    },
+
+    raised_on: {
+      type: Date,
+      default: new Date()
     }
 });
 

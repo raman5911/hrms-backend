@@ -1,6 +1,7 @@
 const Company = require("../models/CompanyModel");
 const EmailToCompanyCodeMapping = require("../models/EmailToCompanyCodeMapping");
 const EmployeeIdToNameMapping = require("../models/EmployeeIdToNameMapping");
+const CompanyPrefix = require("../models/CompanyPrefixModel");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 
@@ -70,15 +71,28 @@ module.exports.addNewEmployee = async (req, res, next) => {
     }
 
     // Check if an employee with the same email already exists
-    const employeeExists = company.employees.some(
+    const employeeEmailExists = company.employees.some(
       (employee) =>
         employee.employee_details.email.toLowerCase() ===
         data.email.toLowerCase()
     );
-    if (employeeExists) {
+    if (employeeEmailExists) {
       return res
         .status(400)
         .json({ message: "Employee with this email already exists" });
+    }
+
+    // Check if an employee with same employee id already exists or not
+    const employeeIDExists = company.employees.some(
+      (employee) =>
+        employee.employee_id ===
+        data.employee_id
+    );
+
+    if (employeeIDExists) {
+      return res
+        .status(400)
+        .json({ message: "This employee id already exists" });
     }
 
     // formatting and arranging data in suitable format before submitting
@@ -362,5 +376,64 @@ module.exports.getParticularEmployee = async (req, res, next) => {
     res
       .status(500)
       .json({ error: "An error occurred while fetching employee details" });
+  }
+};
+
+module.exports.getCompanyPrefix = async (req, res, next) => {
+  try {
+    const result = await CompanyPrefix.find({});
+
+    res.status(200).json({
+      message: "Data fetched successfully",
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching details" });
+  }
+};
+
+module.exports.generateEmployeeID = async (req, res, next) => {
+  try {
+    const { companyCode } = req.params;
+
+    // Find the company and its prefix
+    const companyPrefixData = await CompanyPrefix.findOne({ company_code: companyCode });
+    console.log(companyPrefixData);
+
+    if(!companyPrefixData) {
+      return res.status(404).json({
+        message: "Company not found",
+        success: false,
+      });
+    }
+
+    // Find employees of company
+    const company = await Company.findOne({ company_code: companyCode });
+
+    if (!company) {
+      return res.status(404).json({
+        message: "Company not found",
+        success: false,
+      });
+    }
+
+    const lastEmployeeID = company.employees.at(-1).employee_id;
+    console.log(lastEmployeeID);
+    
+    const companyPrefixCode = companyPrefixData.company_prefix;
+    const lastIdNum = parseInt(lastEmployeeID.split("-")[1], 10);
+
+    const newId = companyPrefixCode + "-" + (lastIdNum + 1).toString().padStart(4, '0');
+
+    res.status(200).json({ success: true, new_id: newId });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while creating new id." });
   }
 };
