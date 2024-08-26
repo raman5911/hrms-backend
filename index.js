@@ -32,7 +32,10 @@ app.use(express.json());
 // Routes
 app.use("/", authRoute);
 
-// Start server
+// reminder cron
+require('./crons/reminderCron');
+
+// port
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
