@@ -11,6 +11,5 @@ router.get('/get_all_requested_by_me', getAllRequestedByMe);
 router.get('/get_direct_reportees_request', getDirectReporteesRequest);
 
 // define dynamic routes in end
-router.get('/:id', getRequestDetails);
 
 module.exports = router;
