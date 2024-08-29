@@ -3,7 +3,9 @@ const EmailToCompanyCodeMapping = require("../models/EmailToCompanyCodeMapping")
 const EmployeeIdToNameMapping = require("../models/EmployeeIdToNameMapping");
 const CompanyPrefix = require("../models/CompanyPrefixModel");
 const bcrypt = require("bcrypt");
-const validator = require("validator");
+const validator = require("validator");  
+
+
 
 module.exports.getAllEmployees = async (req, res, next) => {
   try {
@@ -21,7 +23,9 @@ module.exports.getAllEmployees = async (req, res, next) => {
       .status(500)
       .json({ message: "Error fetching employees", error: error.message });
   }
-};
+}; 
+
+
 
 module.exports.addNewEmployee = async (req, res, next) => {
   try {
@@ -30,31 +34,34 @@ module.exports.addNewEmployee = async (req, res, next) => {
 
     if (!data) {
       return res.json({
-        message: "Please provide employee details.",
+        message:"Please provide employee details.",
       });
-    }
+    } ''
 
     // Email validation
     if (!validator.isEmail(data.email)) {
       return res
         .status(400)
-        .json({ message: "Invalid email format. Email must contain @" });
+        .json({ message:"Invalid email format. Email must contain @" });
     }
-    // Password validation
-    if (
+     
+
+    if (  
       !validator.isStrongPassword(data.password, {
         minLength: 8,
         minLowercase: 1,
         minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
+        minNumbers: 1, 
+        minSymbols: 1, 
       })
     ) {
       return res.status(400).json({
         message:
           "Invalid password. Password must be 8-12 characters long, contain at least one capital letter, and one special character.",
       });
-    }
+    } 
+
+
     // Contact validation
     if (
       !validator.isMobilePhone(`${data.contact}`, "any", { strictMode: false })
@@ -67,8 +74,9 @@ module.exports.addNewEmployee = async (req, res, next) => {
     // Check if company exists
     const company = await Company.findOne({ company_code: companyCode });
     if (!company) {
-      return res.status(404).json({ message: "Company not found" });
+      return res.status(404).json({ message:"Company not found"});
     }
+
 
     // Check if an employee with the same email already exists
     const employeeEmailExists = company.employees.some(
@@ -100,10 +108,10 @@ module.exports.addNewEmployee = async (req, res, next) => {
       employee_id: data.employee_id,
       group_id: data.group_id,  
       employee_details: {
-        name: data.name,
-        gender: data.gender,
+        name:    data.name,
+        gender:  data.gender,
         contact: data.contact,
-        email: data.email,
+        email:   data.email,
       },
       personal_details: {
         pan: data.pan,
@@ -435,5 +443,150 @@ module.exports.generateEmployeeID = async (req, res, next) => {
     res
       .status(500)
       .json({ error: "An error occurred while creating new id." });
+  }
+};
+
+module.exports.getEmployeeinBulk = async (req, res, next) => {
+  try {
+    const { companyCode } = req.params;
+    const filePath = req.file.path; 
+    // Read Excel file
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
+    const worksheet = workbook.getWorksheet(1);
+
+    // Find the company
+    const company = await Company.findOne({ company_code: companyCode });
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Get headers
+    const headers = worksheet.getRow(1).values.slice(1);
+
+    const newEmployees = [];
+    const errors = [];
+
+    // Process rows
+    for (let i = 2; i <= worksheet.rowCount; i++) {
+      const row = worksheet.getRow(i);
+      const employeeData = {};
+
+      headers.forEach((header, index) => {
+        employeeData[header.toLowerCase().replace(/\s+/g, '_')] = row.getCell(index + 1).value;
+      });
+
+      // Validate employee data
+      if (!validator.isEmail(employeeData.email)) {
+        errors.push(`Row ${i}: Invalid email format`);
+        continue;
+      }
+
+      if (!validator.isMobilePhone(`${employeeData.contact}`, "any", { strictMode: false })) {
+        errors.push(`Row ${i}: Invalid contact number`);
+        continue;
+      }
+
+      // Check if employee already exists
+      const employeeExists = company.employees.some(
+        (emp) => emp.employee_details.email.toLowerCase() === employeeData.email.toLowerCase() ||
+                 emp.employee_id === employeeData.employee_id
+      );
+
+      if (employeeExists) {
+        errors.push(`Row ${i}: Employee with this email or ID already exists`);
+        continue;
+      }
+
+      // Create new employee object
+      const newEmployee = {
+        employee_id: employeeData.employee_id,
+        group_id: employeeData.group_id,
+        employee_details: {
+          name: employeeData.name,
+          gender: employeeData.gender,
+          contact: employeeData.contact,
+          email: employeeData.email,
+        },
+        password: await bcrypt.hash(employeeData.password || "defaultPassword123", 12),
+        personal_details: {
+          pan: employeeData.pan,
+          aadharcard: employeeData.aadharcard,
+          personal_email: employeeData.personal_email,
+          date_of_birth: employeeData.date_of_birth,
+        },
+        temporary_address: {
+          state: employeeData.temp_state,
+          city: employeeData.temp_city,
+          pin_code: employeeData.temp_pin_code,
+          address_line_1: employeeData.temp_address_line_1,
+          address_line_2: employeeData.temp_address_line_2,
+        },
+        permanent_address: {
+          state: employeeData.perm_state,
+          city: employeeData.perm_city,
+          pin_code: employeeData.perm_pin_code,
+          address_line1: employeeData.perm_address_line_1,
+          address_line2: employeeData.perm_address_line_2,
+        },
+        other_details: {
+          marital_status: employeeData.marital_status,
+          passport: employeeData.passport,
+          father_name: employeeData.father_name,
+          mother_name: employeeData.mother_name,
+          blood_group: employeeData.blood_group,
+        },
+        official_details: {
+          role: employeeData.role,
+          designation: employeeData.designation,
+          department: employeeData.department,
+          reporting_manager: employeeData.reporting_manager,
+          joining_date: employeeData.joining_date,
+          employee_status: employeeData.employee_status,
+          payroll_type: employeeData.payroll_type,
+        },
+        account_details: {
+          bank_details: {
+            account_name: employeeData.account_name,
+            account_number: employeeData.account_number,
+            ifsc_code: employeeData.ifsc_code,
+          },
+          esi_number: employeeData.esi_number,
+          pf_number: employeeData.pf_number,
+        },
+        created_at: new Date(),
+      };
+
+      newEmployees.push(newEmployee);
+    }
+
+    
+    company.employees.push(...newEmployees);
+    await company.save();
+
+    
+    for (const employee of newEmployees) {
+      await EmailToCompanyCodeMapping.create({
+        email: employee.employee_details.email.toLowerCase(),
+        companyCode: companyCode,
+      });
+
+      await EmployeeIdToNameMapping.create({
+        employee_id: employee.employee_id,
+        name: employee.employee_details.name,
+        email: employee.employee_details.email,
+        companyCode: companyCode
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `${newEmployees.length} employees added successfully`,
+      errors: errors.length > 0 ? errors : undefined
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while processing employee data" });
   }
 };
