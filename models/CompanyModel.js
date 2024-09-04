@@ -168,6 +168,30 @@ const CompanySchema = new mongoose.Schema({
     company_code: {
         type: Number,
     },
+    company_address: {
+        type: String
+    },
+    GST_number: {
+        type: String
+    },
+    bank_details: {
+        account_name: {
+            type: String,
+        },
+        account_number: {
+            type: String,
+        },
+        ifsc_code: {
+            type: String,
+        },
+    },
+    branches: [],
+    logo_url: {
+        type : String
+    },
+    asset_folder_path: {
+        type: String
+    },
     reminder_days: {
         type: Number
     },

@@ -112,6 +112,8 @@ module.exports.employeeLeave = async (req, res, next) => {
 
     console.log(result._id, " ", encrypt_id);
 
+    console.log(company.logo_url);
+
     // sending mail to first approver
     await sendMailToUser(
       {
@@ -122,6 +124,7 @@ module.exports.employeeLeave = async (req, res, next) => {
         reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+        logo_url: company.logo_url
       },
       "request"
     );
@@ -253,6 +256,7 @@ module.exports.WorkFromHome = async (req, res, next) => {
         reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encoded_hash}`,
+        logo_url: company.logo_url
       },
       "request"
     );
@@ -373,6 +377,7 @@ module.exports.newAsset = async (req, res, next) => {
         reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+        logo_url: company.logo_url
       },
       "request"
     );
@@ -497,6 +502,7 @@ module.exports.repairAsset = async (req, res, next) => {
         reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+        logo_url: company.logo_url
       },
       "request"
     );
@@ -617,6 +623,7 @@ module.exports.requestToHR = async (req, res, next) => {
         reciever_email_id: approvers_list[0].email_id,
         request_data: new_request,
         request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
+        logo_url: company.logo_url
       },
       "request"
     );
@@ -760,6 +767,8 @@ module.exports.sendReminders = async () => {
             employee_id: request.requestor_id,
           });
 
+          const currentEmployeeCompany = Company.findOne({ companyCode: employee_data.companyCode });
+
           const current = request.list_of_approvers[request.current_level];
 
           const encrypt_id = await encrypt(`${request._id.toString()}_${request.current_level}`);
@@ -775,6 +784,7 @@ module.exports.sendReminders = async () => {
               request_data: request,
               request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
               reciever_email_id: current.email_id,
+              logo_url: currentEmployeeCompany.logo_url
             },
             "reminder"
           );

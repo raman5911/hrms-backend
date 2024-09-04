@@ -58,6 +58,8 @@ module.exports.approveOrReject = async (req, res, next) => {
     });
     console.log("employee data: " + employee_data);
 
+    const currentEmployeeCompany = Company.findOne({ companyCode: employee_data.companyCode });
+
     // const current_approver_data = await EmployeeIdToNameMapping.findOne({
     //   employee_id: current.employee_id,
     // });
@@ -102,7 +104,8 @@ module.exports.approveOrReject = async (req, res, next) => {
             requested_on: request.raised_on,
             action_date: new Date(),
             remarks: remarks_message,
-            reciever_email_id: employee_data.email
+            reciever_email_id: employee_data.email,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "response"
         );
@@ -139,7 +142,8 @@ module.exports.approveOrReject = async (req, res, next) => {
             requested_on: request.raised_on,
             action_date: new Date(),
             remarks: remarks_message,
-            reciever_email_id: employee_data.email
+            reciever_email_id: employee_data.email,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "response"
         );
@@ -154,7 +158,8 @@ module.exports.approveOrReject = async (req, res, next) => {
             approver_email_id: current.email_id,
             request_data: request,
             request_link: `${process.env.CLIENT_URL}/${encrypt_id}`,
-            reciever_email_id: current.email_id
+            reciever_email_id: current.email_id,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "request"
         );
@@ -188,7 +193,8 @@ module.exports.approveOrReject = async (req, res, next) => {
           requested_on: request.raised_on,
           action_date: new Date(),
           remarks: remarks_message,
-          reciever_email_id: employee_data.email
+          reciever_email_id: employee_data.email,
+          logo_url: currentEmployeeCompany.logo_url
         },
         "response"
       );
@@ -267,6 +273,8 @@ module.exports.revoke = async (req, res, next) => {
       });
       console.log("employee data: " + employee_data);
 
+      const currentEmployeeCompany = Company.findOne({ companyCode: employee_data.companyCode });
+
       // const current_approver_data = await EmployeeIdToNameMapping.findOne({
       //   employee_id: current.employee_id,
       // });
@@ -298,7 +306,8 @@ module.exports.revoke = async (req, res, next) => {
             approver_email_id: current.email_id,
             request_data: request,
             request_link: `${process.env.CLIENT_URL}/${new_encrypt_id}`,
-            reciever_email_id: current.email_id
+            reciever_email_id: current.email_id,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "request"
         );
@@ -311,7 +320,8 @@ module.exports.revoke = async (req, res, next) => {
             requested_to: `${current.name} ( ${current.employee_id} )`,
             requested_on: request.raised_on,
             action_date: new Date(),
-            reciever_email_id: employee_data.email
+            reciever_email_id: employee_data.email,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "revoke"
         );
@@ -344,7 +354,8 @@ module.exports.revoke = async (req, res, next) => {
             requested_to: `${list_of_approvers[current_level - 1].name} ( ${list_of_approvers[current_level - 1].employee_id} )`,
             requested_on: updated_request_data.raised_on,
             action_date: new Date(),
-            reciever_email_id: list_of_approvers[current_level - 1].email_id
+            reciever_email_id: list_of_approvers[current_level - 1].email_id,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "revoke"
         );
@@ -361,7 +372,8 @@ module.exports.revoke = async (req, res, next) => {
             approver_email_id: current.email_id,
             request_data: request,
             request_link: `${process.env.CLIENT_URL}/${new_encrypt_id}`,
-            reciever_email_id: current.email_id
+            reciever_email_id: current.email_id,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "request"
         );
@@ -374,7 +386,8 @@ module.exports.revoke = async (req, res, next) => {
             requested_to: `${current.name} ( ${current.employee_id} )`,
             requested_on: request.raised_on,
             action_date: new Date(),
-            reciever_email_id: employee_data.email
+            reciever_email_id: employee_data.email,
+            logo_url: currentEmployeeCompany.logo_url
           },
           "revoke"
         );

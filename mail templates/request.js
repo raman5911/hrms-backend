@@ -1,4 +1,10 @@
+const path = require('path');
+
 module.exports.mail_template = (data) => {
+  const rootDirectory = path.resolve(__dirname, '..');
+  const fullPath = path.join(rootDirectory, data.logo_url);
+  console.log(fullPath);
+
   return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -21,7 +27,7 @@ module.exports.mail_template = (data) => {
   <body>
     <div class="container">
       <div style="display: flex; justify-content: space-evenly; margin-bottom: 20px;">
-        <img style="height: 90px; margin-right: 1rem;" src="https://media.licdn.com/dms/image/C4E0BAQF8-xvCiUqnqg/company-logo_200_200/0/1658771405657/daksh_electronics_pvt_ltd_logo?e=2147483647&v=beta&t=C0JmffiqSTDwQUu_MVSou36OHbefgb7HrzXMEagdLg4" />
+        <img style="height: 90px; margin-right: 1rem;" src="${fullPath}" />
         <h1 style="margin-bottom: 10px;">${data.request_type}</h1>
       </div>
       

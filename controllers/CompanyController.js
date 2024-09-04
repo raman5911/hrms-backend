@@ -4,6 +4,125 @@ const EmployeeIdToNameMapping = require("../models/EmployeeIdToNameMapping");
 const CompanyPrefix = require("../models/CompanyPrefixModel");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
+
+// Multer storage configuration
+const imageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const folderPath = path.join(
+      __dirname,
+      `../company-assets/${req.nextCompanyCode}`
+    );
+
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+      console.log(`Folder created: ${folderPath}`);
+    } else {
+      console.log(`Folder already exists: ${folderPath}`);
+    }
+
+    cb(null, folderPath);
+  },
+  filename: function (req, file, cb) {
+    cb(null, "logo.png"); // Adjust the file extension if necessary
+  },
+});
+
+const uploadImage = multer({ storage: imageStorage });
+
+// Route handler
+module.exports.addNewCompany = async (req, res, next) => {
+  try {
+    // Fetch all companies in sorted order to calculate the next company code
+    const allCompanies = await Company.find().sort({ company_code: 1 });
+    console.log("All companies: ", allCompanies);
+
+    // Get the last used company code
+    const lastCompanyCode = allCompanies.at(-1)?.company_code || 0; // Use 0 if no companies exist
+    console.log("Last company code: ", lastCompanyCode);
+
+    // New company code will be lastCompanyCode + 1
+    const nextCompanyCode = lastCompanyCode + 1;
+    req.nextCompanyCode = nextCompanyCode;
+
+    console.log("Next Company Code:", nextCompanyCode);
+
+    uploadImage.single("image")(req, res, async function (err) {
+      if (err) {
+        return res
+          .status(400)
+          .json({ message: "Error uploading image", error: err.message });
+      }
+
+      // Now the file is uploaded, proceed with the rest of your logic
+      const nextCompanyCode = req.nextCompanyCode;
+      console.log("Next Company Code:", nextCompanyCode);
+
+      const companyCode = req.cookies.companyCode;
+      const jsonData = req.body.data;
+      console.log("Body: ", req.body);
+      console.log("Data: ", jsonData);
+      console.log("File: ", req.file);
+
+      // Parse JSON data
+      let data;
+      try {
+        data = JSON.parse(jsonData);
+      } catch (parseError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid JSON data", error: parseError.message });
+      }
+
+      // check if user is a super admin or not
+      if (companyCode != 0) {
+        return res.status(403).json({
+          message: "You can't create a new company. You are not a super admin.",
+          error: true,
+        });
+      }
+
+      if (!data) {
+        return res.status(400).json({ message: "Please provide all details." });
+      }
+
+      // Formatting data
+      const new_company = new Company({
+        company_name: data.company_name,
+        company_code: req.nextCompanyCode,
+        company_address: data.company_address,
+        GST_number: data.GST_number,
+        bank_details: data.bank_details,
+        branches: data.branches,
+        logo_url: `/company-assets/${req.nextCompanyCode}/logo.png`,
+        asset_folder_path: `/company-assets/${req.nextCompanyCode}`,
+      });
+
+      // Save the new company
+      await new_company.save();
+
+      // Insert new entry in company prefix table
+      await CompanyPrefix.create({
+        company_name: data.company_name,
+        company_code: req.nextCompanyCode,
+        company_prefix: data.company_prefix,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Company created successfully",
+        data: new_company,
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: "Error creating new company", error: error.message });
+  }
+};
 
 module.exports.getAllEmployees = async (req, res, next) => {
   try {
@@ -84,9 +203,7 @@ module.exports.addNewEmployee = async (req, res, next) => {
 
     // Check if an employee with same employee id already exists or not
     const employeeIDExists = company.employees.some(
-      (employee) =>
-        employee.employee_id ===
-        data.employee_id
+      (employee) => employee.employee_id === data.employee_id
     );
 
     if (employeeIDExists) {
@@ -98,7 +215,7 @@ module.exports.addNewEmployee = async (req, res, next) => {
     // formatting and arranging data in suitable format before submitting
     const new_employee = {
       employee_id: data.employee_id,
-      group_id: data.group_id,  
+      group_id: data.group_id,
       employee_details: {
         name: data.name,
         gender: data.gender,
@@ -172,13 +289,13 @@ module.exports.addNewEmployee = async (req, res, next) => {
       employee_id: data.employee_id,
       name: data.name,
       email: data.email,
-      companyCode: companyCode
-    })
+      companyCode: companyCode,
+    });
 
     res.status(201).json({
       success: true,
       message: "Employee added successfully",
-      data: company.employees[-1],
+      data: company.employees.at(-1),
     });
   } catch (error) {
     console.log(error);
@@ -296,9 +413,11 @@ module.exports.editEmployeeData = async (req, res, next) => {
     // Save the updated company document
     await company.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "Employee details updated successfully", employee });
+    res.status(200).json({
+      success: true,
+      message: "Employee details updated successfully",
+      employee,
+    });
   } catch (error) {
     console.log(error);
     res
@@ -390,9 +509,7 @@ module.exports.getCompanyPrefix = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching details" });
+    res.status(500).json({ error: "An error occurred while fetching details" });
   }
 };
 
@@ -401,10 +518,12 @@ module.exports.generateEmployeeID = async (req, res, next) => {
     const { companyCode } = req.params;
 
     // Find the company and its prefix
-    const companyPrefixData = await CompanyPrefix.findOne({ company_code: companyCode });
+    const companyPrefixData = await CompanyPrefix.findOne({
+      company_code: companyCode,
+    });
     console.log(companyPrefixData);
 
-    if(!companyPrefixData) {
+    if (!companyPrefixData) {
       return res.status(404).json({
         message: "Company not found",
         success: false,
@@ -423,17 +542,171 @@ module.exports.generateEmployeeID = async (req, res, next) => {
 
     const lastEmployeeID = company.employees.at(-1).employee_id;
     console.log(lastEmployeeID);
-    
+
     const companyPrefixCode = companyPrefixData.company_prefix;
     const lastIdNum = parseInt(lastEmployeeID.split("-")[1], 10);
 
-    const newId = companyPrefixCode + "-" + (lastIdNum + 1).toString().padStart(4, '0');
+    const newId =
+      companyPrefixCode + "-" + (lastIdNum + 1).toString().padStart(4, "0");
 
     res.status(200).json({ success: true, new_id: newId });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: "An error occurred while creating new id." });
+  }
+};
+
+module.exports.getEmployeeinBulk = async (req, res, next) => {
+  try {
+    const { companyCode } = req.params;
+    const filePath = req.file.path;
+    // Read Excel file
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
+    const worksheet = workbook.getWorksheet(1);
+
+    // Find the company
+    const company = await Company.findOne({ company_code: companyCode });
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Get headers
+    const headers = worksheet.getRow(1).values.slice(1);
+
+    const newEmployees = [];
+    const errors = [];
+
+    // Process rows
+    for (let i = 2; i <= worksheet.rowCount; i++) {
+      const row = worksheet.getRow(i);
+      const employeeData = {};
+
+      headers.forEach((header, index) => {
+        employeeData[header.toLowerCase().replace(/\s+/g, "_")] = row.getCell(
+          index + 1
+        ).value;
+      });
+
+      // Validate employee data
+      if (!validator.isEmail(employeeData.email)) {
+        errors.push(`Row ${i}: Invalid email format`);
+        continue;
+      }
+
+      if (
+        !validator.isMobilePhone(`${employeeData.contact}`, "any", {
+          strictMode: false,
+        })
+      ) {
+        errors.push(`Row ${i}: Invalid contact number`);
+        continue;
+      }
+
+      // Check if employee already exists
+      const employeeExists = company.employees.some(
+        (emp) =>
+          emp.employee_details.email.toLowerCase() ===
+            employeeData.email.toLowerCase() ||
+          emp.employee_id === employeeData.employee_id
+      );
+
+      if (employeeExists) {
+        errors.push(`Row ${i}: Employee with this email or ID already exists`);
+        continue;
+      }
+
+      // Create new employee object
+      const newEmployee = {
+        employee_id: employeeData.employee_id,
+        group_id: employeeData.group_id,
+        employee_details: {
+          name: employeeData.name,
+          gender: employeeData.gender,
+          contact: employeeData.contact,
+          email: employeeData.email,
+        },
+        password: await bcrypt.hash(
+          employeeData.password || "defaultPassword123",
+          12
+        ),
+        personal_details: {
+          pan: employeeData.pan,
+          aadharcard: employeeData.aadharcard,
+          personal_email: employeeData.personal_email,
+          date_of_birth: employeeData.date_of_birth,
+        },
+        temporary_address: {
+          state: employeeData.temp_state,
+          city: employeeData.temp_city,
+          pin_code: employeeData.temp_pin_code,
+          address_line_1: employeeData.temp_address_line_1,
+          address_line_2: employeeData.temp_address_line_2,
+        },
+        permanent_address: {
+          state: employeeData.perm_state,
+          city: employeeData.perm_city,
+          pin_code: employeeData.perm_pin_code,
+          address_line1: employeeData.perm_address_line_1,
+          address_line2: employeeData.perm_address_line_2,
+        },
+        other_details: {
+          marital_status: employeeData.marital_status,
+          passport: employeeData.passport,
+          father_name: employeeData.father_name,
+          mother_name: employeeData.mother_name,
+          blood_group: employeeData.blood_group,
+        },
+        official_details: {
+          role: employeeData.role,
+          designation: employeeData.designation,
+          department: employeeData.department,
+          reporting_manager: employeeData.reporting_manager,
+          joining_date: employeeData.joining_date,
+          employee_status: employeeData.employee_status,
+          payroll_type: employeeData.payroll_type,
+        },
+        account_details: {
+          bank_details: {
+            account_name: employeeData.account_name,
+            account_number: employeeData.account_number,
+            ifsc_code: employeeData.ifsc_code,
+          },
+          esi_number: employeeData.esi_number,
+          pf_number: employeeData.pf_number,
+        },
+        created_at: new Date(),
+      };
+
+      newEmployees.push(newEmployee);
+    }
+
+    company.employees.push(...newEmployees);
+    await company.save();
+
+    for (const employee of newEmployees) {
+      await EmailToCompanyCodeMapping.create({
+        email: employee.employee_details.email.toLowerCase(),
+        companyCode: companyCode,
+      });
+
+      await EmployeeIdToNameMapping.create({
+        employee_id: employee.employee_id,
+        name: employee.employee_details.name,
+        email: employee.employee_details.email,
+        companyCode: companyCode,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `${newEmployees.length} employees added successfully`,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error(error);
     res
       .status(500)
-      .json({ error: "An error occurred while creating new id." });
+      .json({ error: "An error occurred while processing employee data" });
   }
 };
