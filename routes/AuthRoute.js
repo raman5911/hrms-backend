@@ -9,6 +9,7 @@ const RequestRoute = require("../routes/RequestRoute");
 const companyRoute = require("../routes/CompanyRoute");
 const groupRoute = require("../routes/GroupRoute");
 const assetRoute = require("../routes/AssetRoute");
+const attendanceRoute = require("../routes/AttendanceRoute");
 
 const { login } =  require("../controllers/AuthenticationController");
 const { approveOrReject, revoke } = require("../controllers/ApproveController");
@@ -42,6 +43,8 @@ router.put('/revoke/:id', authMiddleware, revoke);
 
 router.use('/email_templates', authMiddleware, emailTemplatesRoute);
 router.use('/asset', assetRoute);
+
+router.use('/attendance', authMiddleware, attendanceRoute);
 
 // Excel routes
 router.post('/upload-excel', upload.single('excelFile'), ExcelController.uploadExcelFile);

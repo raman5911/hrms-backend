@@ -35,6 +35,16 @@ const uploadImage = multer({ storage: imageStorage });
 // Route handler
 module.exports.addNewCompany = async (req, res, next) => {
   try {
+    const companyCode = req.cookies.companyCode;
+
+    // check if user is a super admin or not
+    if (companyCode != 0) {
+      return res.status(403).json({
+        message: "You can't create a new company. You are not a super admin.",
+        error: true,
+      });
+    }
+
     // Fetch all companies in sorted order to calculate the next company code
     const allCompanies = await Company.find().sort({ company_code: 1 });
     console.log("All companies: ", allCompanies);
@@ -60,7 +70,6 @@ module.exports.addNewCompany = async (req, res, next) => {
       const nextCompanyCode = req.nextCompanyCode;
       console.log("Next Company Code:", nextCompanyCode);
 
-      const companyCode = req.cookies.companyCode;
       const jsonData = req.body.data;
       console.log("Body: ", req.body);
       console.log("Data: ", jsonData);
@@ -98,6 +107,12 @@ module.exports.addNewCompany = async (req, res, next) => {
         branches: data.branches,
         logo_url: `/company-assets/${req.nextCompanyCode}/logo.png`,
         asset_folder_path: `/company-assets/${req.nextCompanyCode}`,
+        category: data.category,
+        location: {
+          type: "Point",
+          coordinates: [data.coordinates.latitude, data.coordinates.longitude]     // [latitude, longitude]
+        },
+        radius_area: data.radius_area
       });
 
       // Save the new company

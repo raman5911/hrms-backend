@@ -185,7 +185,45 @@ const CompanySchema = new mongoose.Schema({
             type: String,
         },
     },
-    branches: [],
+    branches: [
+        {
+            name: {
+                type: String
+            },
+            GST_number: {
+                type: String
+            },
+            address: {
+                type: String
+            },
+            location: {
+                type: {
+                    type: String, 
+                    enum: ['Point'], // Ensures that the 'type' is always 'Point'
+                },
+                coordinates: {
+                    type: [Number], // Array of numbers: [longitude, latitude]
+                }
+            },
+            admin_contact: {
+                type: String
+            },
+            bank_details: {
+                account_name: {
+                    type: String,
+                },
+                account_number: {
+                    type: String,
+                },
+                ifsc_code: {
+                    type: String,
+                },
+            },
+            category: {
+                type: String
+            }
+        }
+    ],
     logo_url: {
         type : String
     },
@@ -195,8 +233,33 @@ const CompanySchema = new mongoose.Schema({
     reminder_days: {
         type: Number
     },
+    main_office_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        default: null
+    },
+    category: {
+        type: String
+    },
+    location: {
+        type: {
+            type: String, 
+            enum: ['Point'], // Ensures that the 'type' is always 'Point'
+            required: true
+        },
+        coordinates: {
+            type: [Number], // Array of numbers: [latitude, longitude]
+            required: true
+        }
+    },
+    radius_area: {          // in meters
+        type: Number
+    },
     employees: [EmployeeSchema]
 });
+
+// Create a 2dsphere index to enable geospatial queries
+CompanySchema.index({ location: '2dsphere' });
 
 const Company = mongoose.model('Company', CompanySchema);
 
